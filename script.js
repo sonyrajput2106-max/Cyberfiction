@@ -1,12 +1,17 @@
+//tells gsap to use scrolltrigger plugin
 function locomotive() {
     gsap.registerPlugin(ScrollTrigger);
 
+    //creates smooth scrolling on the #main element
     const locoScroll = new LocomotiveScroll({
         el: document.querySelector("#main"),
         smooth: true,
     });
-    locoScroll.on("scroll", ScrollTrigger.update);
 
+    locoScroll.on("scroll", ScrollTrigger.update); //whenever page scrolls, scrolltrigger updates the animation
+
+
+    //this function connects GSAP with locomotive scrolling
     ScrollTrigger.scrollerProxy("#main", {
         scrollTop(value) {
             return arguments.length
@@ -14,6 +19,7 @@ function locomotive() {
                 : locoScroll.scroll.instance.scroll.y;
         },
 
+        //tells gsap the size of the viewport
         getBoundingClientRect() {
             return {
                 top: 0,
@@ -23,29 +29,33 @@ function locomotive() {
             };
         },
 
+        //decides how elements will be pinned during scrolling
         pinType: document.querySelector("#main").style.transform
             ? "transform"
             : "fixed",
     });
+
+    // if scrolltrigger refreshes=>  locomotive scroll updates too
     ScrollTrigger.addEventListener("refresh", () => locoScroll.update());
     ScrollTrigger.refresh();
 }
 locomotive();
 
-
+//selecting the canvas element wheere the images will be drawen
 const canvas = document.querySelector("canvas");
 const context = canvas.getContext("2d");
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-
+// if the brower window change its size , the canvas also resizes
 window.addEventListener("resize", function () {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     render();
 });
 
+//it contains 300 image paths
 function files(index) {
     var data = `
      ./male0001.png
@@ -349,26 +359,27 @@ function files(index) {
      ./male0299.png
      ./male0300.png
 `;
+    //this splits the lists and returns one image path based on index
     return data.split("\n")[index];
 }
 
 const frameCount = 300;
-
+//stores all images
 const images = [];
-const imageSeq = {
+const imageSeq = {//current frameno.
     frame: 1,
 };
-
+//loading images
 for (let i = 0; i < frameCount; i++) {
     const img = new Image();
     img.src = files(i);
     images.push(img);
 }
-
-gsap.to(imageSeq, {
-    frame: frameCount - 1,
-    snap: "frame",
-    ease: `none`,
+//scroll animation
+gsap.to(imageSeq, { //gsap animates the object imageseq
+    frame: frameCount - 1, //frame change 1-299
+    snap: "frame", //ensures exact frame number
+    ease: `none`, //animation moves linearly
     scrollTrigger: {
         scrub: 0.15,
         trigger: `#page>canvas`,
@@ -379,20 +390,26 @@ gsap.to(imageSeq, {
     onUpdate: render,
 });
 
-images[1].onload = render;
+images[1].onload = render; // first image loads draw it
 
+//this draws the current frame image on canvas
 function render() {
     scaleImage(images[imageSeq.frame], context);
 }
 
+//fits imge to the screen
 function scaleImage(img, ctx) {
     var canvas = ctx.canvas;
+    //calculate horizontal and vertical ratios
     var hRatio = canvas.width / img.width;
     var vRatio = canvas.height / img.height;
+    //chooses the bigger ratio so that image covers full screen
     var ratio = Math.max(hRatio, vRatio);
     var centerShift_x = (canvas.width - img.width * ratio) / 2;
     var centerShift_y = (canvas.height - img.height * ratio) / 2;
+    //clears previous frame
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    //draws the image on canvas
     ctx.drawImage(
         img,
         0,
@@ -405,6 +422,7 @@ function scaleImage(img, ctx) {
         img.height * ratio
     );
 }
+//this pins the canvas - canvas stays fixed while scrolling
 ScrollTrigger.create({
     trigger: "#page>canvas",
     pin: true,
@@ -415,7 +433,7 @@ ScrollTrigger.create({
 });
 
 
-
+//this pins page1 during scrolling
 gsap.to("#page1", {
     scrollTrigger: {
         trigger: `#page1`,
